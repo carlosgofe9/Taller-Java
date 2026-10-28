@@ -1,0 +1,120 @@
+==================================================
+SUITE DE PRUEBAS INTEGRATION - RETAIL SERVICE
+URL de Swagger UI:
+http://localhost:8080/swagger-ui/index.html
+
+ALTA DE PRODUCTO PRINCIPAL
+
+Endpoint: POST /api/v1/products
+
+Request Body (JSON):
+{
+"sku": "PROD-001",
+"name": "Laptop Gaming",
+"description": "16GB RAM, SSD 512GB",
+"price": 1200.00,
+"stock": 10,
+"category": "Electrónica"
+}
+
+Respuesta Esperada:
+Code: 201 Created
+
+Explicación:
+Registra un nuevo producto en la base de datos H2. La API asigna el ID 1 autogenerado y establece active: true.
+
+ALTA DE PRODUCTO SECUNDARIO (STOCK BAJO)
+
+Endpoint: POST /api/v1/products
+
+Request Body (JSON):
+{
+"sku": "PROD-002",
+"name": "Mouse Gamer",
+"description": "RGB 16000 DPI",
+"price": 50.00,
+"stock": 6,
+"category": "Accesorios"
+}
+
+Respuesta Esperada:
+Code: 201 Created
+
+Explicación:
+Crea el producto con ID 2 con inventario de 6 unidades para poner a prueba las alertas asíncronas de almacén cuando el stock baje de 5 unidades.
+
+CREACIÓN DE PEDIDO (PROCESAMIENTO SINCRÓNICO + @Async)
+
+Endpoint: POST /api/v1/orders
+
+Request Body (JSON):
+{
+"cliente": "carlos@gmail.com",
+"items": [
+{
+"productId": 1,
+"cantidad": 1
+}
+]
+}
+
+Respuesta Esperada:
+Code: 201 Created (Total: 1200, Status: "EN_PROCESO")
+
+Explicación:
+Valida la lógica sincrónica: verifica stock, descuenta 1 unidad de Laptop Gaming (quedan 9) y calcula el total. De forma asíncrona (@Async), la consola de VS Code muestra la confirmación enviada por NotificationService.
+
+DISPARO DE ALERTA DE STOCK CRÍTICO (@Async)
+
+Endpoint: POST /api/v1/orders
+
+Request Body (JSON):
+{
+"cliente": "carlos@gmail.com",
+"items": [
+{
+"productId": 2,
+"cantidad": 2
+}
+]
+}
+
+Respuesta Esperada:
+Code: 201 Created (Total: 100)
+
+Explicación:
+Reduce el stock del Mouse Gamer de 6 a 4 unidades. Al quedar por debajo de 5 unidades, se ejecuta el hilo asíncrono que imprime en la consola la alerta de stock crítico.
+
+MANEJO GLOBAL DE EXCEPCIÓN: STOCK INSUFICIENTE
+
+Endpoint: POST /api/v1/orders
+
+Request Body (JSON):
+{
+"cliente": "carlos@gmail.com",
+"items": [
+{
+"productId": 1,
+"cantidad": 20
+}
+]
+}
+
+Respuesta Esperada:
+Code: 409 Conflict
+
+Explicación:
+Valida la restricción de inventario (hay 9 disponibles, se solicitan 20). @RestControllerAdvice atrapa la excepción y devuelve un JSON estandarizado indicando que el stock es insuficiente.
+
+MANEJO GLOBAL DE EXCEPCIÓN: RECURSO NO ENCONTRADO
+
+Endpoint: GET /api/v1/products/999
+
+Parámetro URL:
+id: 999
+
+Respuesta Esperada:
+Code: 404 Not Found
+
+Explicación:
+Comprueba la búsqueda de un recurso inexistente. El manejador global de excepciones atrapa RecursoNoEncontradoException y responde con HTTP 404 en formato JSON.
