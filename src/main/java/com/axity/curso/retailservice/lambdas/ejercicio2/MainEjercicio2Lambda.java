@@ -14,8 +14,8 @@ public class MainEjercicio2Lambda {
 
         // 2. Aplicación de la API Stream: map() con expresión Lambda y collect()
         List<Double> preciosConDescuento = preciosLista.stream()
-                .map(precio -> precio * 0.85) // Lambda: multiplica cada precio por 0.85 (15% de descuento)
-                .collect(Collectors.toList()); // Recolecta el resultado transformado en una nueva lista
+                .map(precio -> precio * 0.85)
+                .collect(Collectors.toList()); 
 
         // 3. Impresión de resultados en consola para verificar la transformación
         System.out.println("Lista de Precios Base (Original):");
