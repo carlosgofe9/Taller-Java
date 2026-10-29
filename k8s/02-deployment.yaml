@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: retailservice-deployment
+  labels:
+    app: retailservice
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: retailservice
+  template:
+    metadata:
+      labels:
+        app: retailservice
+    spec:
+      containers:
+      - name: retailservice-container
+        image: retailservice:v1.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: retailservice-config
+        - secretRef:
+            name: retailservice-secret
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
